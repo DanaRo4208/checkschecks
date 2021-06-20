@@ -1,0 +1,40 @@
+# This script will pull data from elastic sec-phishing index and find IOCs
+# Each log which the script will finish to take the action I'll change status to : in progress
+# Then it means I'll pull with the query only events with status: open
+
+# Import Elasticsearch package
+from elasticsearch import Elasticsearch
+
+# VARS for index_search()
+# index_name = 'wowui'
+# search = {'query': {'match_all': {}}}
+
+endpoint = "https://wowui.kb.us-east-1.aws.found.io"
+username = "wowui"
+password = "hf836db&jd*d"
+
+def connection(username, password, endpoint):
+    es = Elasticsearch(
+        [endpoint],
+        http_auth=(username, password),
+        scheme="https",
+        port=443,
+        use_ssl=True,
+        request_timeout=60
+    )
+    return es
+
+
+# Perform a search to get the value
+def index_search(es, index_name, search):
+    res = es.search(index=index_name, body=search)
+    size = res['hits']['total']['value']
+    res = es.search(index=index_name, body=search, size=size)
+    return res
+
+
+# update payload with custom fields
+def update_field(es, id, index_name, data_to_update, field_name):
+    body_to_update = {"""doc""": {field_name: data_to_update}}
+    response = es.update(index=index_name, id=id, body=body_to_update, doc_type="_doc")
+    print(response)
